@@ -1,7 +1,11 @@
 
 provider "google" {
-  credentials = file("~/Documents/keys/terraform-dev-environment-59cdb88bccc4.json")
-  project = "terraform-dev-environment"
+#  credentials = file("~/Documents/keys/terraform-dev-environment-59cdb88bccc4.json")
+  credentials = file("~/Documents/keys/terraform-prod-environment-30ea771a4560.json")
+  project = "terraform-prod-environment"
+#  credentials = "$(terraform.workspace == 'production' ? file('~/Documents/keys/terraform-prod-environment-30ea771a4560.json') : file('~/Documents/keys/terraform-dev-environment-59cdb88bccc4.json')"
+#  project = "$(terraform.workspace == 'production' ? 'terraform-prod-environment' : 'terraform-dev-environment')"
+
   region  = "us-central1"
   zone    = "us-central1-a"
 }
@@ -19,7 +23,7 @@ resource "google_compute_instance" "vm_instance" {
   }
   network_interface {
     # A default network is created for all GCP projects
-    network =  google_compute_network.default.self_link
+    network =  google_compute_network.terraform_network.self_link
     # use ephemeral IP
     access_config {}
   }
@@ -33,9 +37,9 @@ resource "google_compute_instance" "vm_instance" {
 
 }
 
-resource "google_compute_firewall" "default" {
+resource "google_compute_firewall" "terraform_firewall" {
   name    = "test-firewall"
-  network = google_compute_network.default.name
+  network = google_compute_network.terraform_network.name
 
   allow {
     protocol = "icmp"
@@ -49,20 +53,7 @@ resource "google_compute_firewall" "default" {
   target_tags = ["web"]
 }
 
-resource "google_compute_network" "default" {
+resource "google_compute_network" "terraform_network" {
   name = "test-network"
+  auto_create_subnetworks = "true"
 }
-
-
-#resource "google_compute_network" "terraform-network" {
-#  name = "terraform-network"
- # #auto_create_subnetworks = "true"}
-#resource "google_compute_firewall" "firewall" {
-  #name = "allow-default"
-
- # network = "terraform-network"
- # allow {
- #   protocol = "icmp"}
- # allow {
- #   protocol = "tcp"
- #   ports    = ["80", "22"]}}
